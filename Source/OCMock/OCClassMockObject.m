@@ -106,30 +106,6 @@
     Method myForwardMethod = class_getInstanceMethod([self mockObjectClass], @selector(forwardInvocationForClassObject:));
     IMP myForwardIMP = method_getImplementation(myForwardMethod);
     class_addMethod(newMetaClass, @selector(forwardInvocation:), myForwardIMP, method_getTypeEncoding(myForwardMethod));
-
-
-    /* adding forwarder for most class methods (instance methods on meta class) to allow for verify after run */
-    NSArray *methodBlackList = @[@"class", @"forwardingTargetForSelector:", @"methodSignatureForSelector:", @"forwardInvocation:", @"isBlock",
-            @"instanceMethodForwarderForSelector:", @"instanceMethodSignatureForSelector:"];
-    [NSObject enumerateMethodsInClass:originalMetaClass usingBlock:^(Class cls, SEL sel) {
-        if((cls == object_getClass([NSObject class])) || (cls == [NSObject class]) || (cls == object_getClass(cls)))
-            return;
-        NSString *className = NSStringFromClass(cls);
-        NSString *selName = NSStringFromSelector(sel);
-        if(([className hasPrefix:@"NS"] || [className hasPrefix:@"UI"]) &&
-           ([selName hasPrefix:@"_"] || [selName hasSuffix:@"_"]))
-            return;
-        if([methodBlackList containsObject:selName])
-            return;
-        @try
-        {
-            [self setupForwarderForClassMethodSelector:sel];
-        }
-        @catch(NSException *e)
-        {
-            // ignore for now
-        }
-    }];
 }
 
 - (void)setupForwarderForClassMethodSelector:(SEL)selector
