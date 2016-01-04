@@ -187,8 +187,8 @@ static NSString *TestNotification = @"TestNotification";
 
 - (void)testAcceptsStubbedMethodWithNilArgument
 {
-	[[mock stub] hasSuffix:nil];
-	[mock hasSuffix:nil];
+	[[mock stub] uppercaseStringWithLocale:nil];
+	[mock uppercaseStringWithLocale:nil];
 }
 
 - (void)testRaisesExceptionWhenMethodWithWrongArgumentIsCalled
@@ -381,6 +381,16 @@ static NSString *TestNotification = @"TestNotification";
 {
     [[[mock stub] ignoringNonObjectArgs] rangeOfString:@"foo" options:0];
     XCTAssertThrows([mock rangeOfString:@"bar" options:NSRegularExpressionSearch], @"Should have raised an exception.");
+}
+
+- (void)testBlocksAreNotConsideredNonObjectArguments
+{
+    [[[mock stub] ignoringNonObjectArgs] enumerateLinesUsingBlock:[OCMArg invokeBlock]];
+    __block BOOL blockWasInvoked = NO;
+    [mock enumerateLinesUsingBlock:^(NSString * _Nonnull line, BOOL * _Nonnull stop) {
+        blockWasInvoked = YES;
+    }];
+    XCTAssertTrue(blockWasInvoked, @"Should not have ignored the block argument.");
 }
 
 
@@ -862,6 +872,7 @@ static NSString *TestNotification = @"TestNotification";
 	[[mock expect] lowercaseString];
 	XCTAssertThrows([mock verifyWithDelay:0.1], @"Should have raised an exception because method was not called.");
 }
+
 
 // --------------------------------------------------------------------------------------
 //	ordered expectations
