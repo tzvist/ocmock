@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2013-2015 Erik Doernenburg and contributors
+ *  Copyright (c) 2013-2016 Erik Doernenburg and contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use these files except in compliance with the License. You may obtain
@@ -17,6 +17,7 @@
 #import <XCTest/XCTest.h>
 #import <OCMock/OCMock.h>
 #import <objc/runtime.h>
+#import "TestClassWithCustomReferenceCounting.h"
 
 #if TARGET_OS_IPHONE
 #define NSRect CGRect
@@ -264,6 +265,16 @@ static NSUInteger initializeCallCount = 0;
     XCTAssertThrows(OCMPartialMock(nil));
 }
 
+- (void)testPartialMockOfCustomReferenceCountingObject
+{
+    /* The point of using an object that implements its own reference counting methods is to force
+       -retain to be called even though the test is compiled with ARC. (Normally ARC does some magic
+       that bypasses dispatching to -retain.) Issue #245 turned up a recursive crash when partial
+       mocks used a forwarder for -retain. */
+    TestClassWithCustomReferenceCounting *realObject = [TestClassWithCustomReferenceCounting new];
+    id partialMock = OCMPartialMock(realObject);
+    XCTAssertNotNil(partialMock);
+}
 
 #pragma mark   Tests for KVO interaction with mocks
 
