@@ -92,13 +92,13 @@ TestOpaque myOpaque;
 
 @interface TestClassWithBlockArgMethod : NSObject
 
-- (void)doStuffWithBlock:(void (^)())block andString:(id)aString;
+- (void)doStuffWithBlock:(void (^)(void))block andString:(id)aString;
 
 @end
 
 @implementation TestClassWithBlockArgMethod
 
-- (void)doStuffWithBlock:(void (^)())block andString:(id)aString;
+- (void)doStuffWithBlock:(void (^)(void))block andString:(id)aString;
 {
     // stubbed out anyway
 }
@@ -147,6 +147,29 @@ TestOpaque myOpaque;
 
 @end
 
+
+@protocol TestProtocol <NSObject>
++ (NSString *)stringValueClassMethod;
+- (int)primitiveValue;
+@optional
+- (id)objectValue;
+@end
+
+
+@interface TestClassWithProtocolBlockArgMethod : NSObject
+
+- (void)doStuffWithBlock:(void (^)(id<TestProtocol> arg))block;
+
+@end
+
+@implementation TestClassWithProtocolBlockArgMethod
+
+- (void)doStuffWithBlock:(void (^)(id<TestProtocol> arg))block;
+{
+    // stubbed out anyway
+}
+
+@end
 
 static NSString *TestNotification = @"TestNotification";
 
@@ -774,6 +797,42 @@ static NSString *TestNotification = @"TestNotification";
     XCTAssertFalse(blockWasInvoked, @"Should not have invoked block.");
 }
 
+- (void)testInvokesBlockWithClassMockArgs
+{
+    id mockString = OCMClassMock([NSString class]);
+    [[mock stub] enumerateLinesUsingBlock:[OCMArg invokeBlockWithArgs:mockString, [OCMArg defaultValue], nil]];
+
+    __block BOOL wasCalled = NO;
+    __block NSString *firstParam;
+    void (^block)(NSString *, BOOL *) = ^(NSString *line, BOOL *stop)
+    {
+        wasCalled = YES;
+        firstParam = line;
+    };
+    [mock enumerateLinesUsingBlock:block];
+
+    XCTAssertEqual(wasCalled, YES, @"Should have invoked block.");
+    XCTAssertEqual(firstParam, mockString, @"First param does not match.");
+}
+
+- (void)testInvokesBlockWithProtocolMockArgs
+{
+    id mockProtocol = OCMProtocolMock(@protocol(TestProtocol));
+    id mockObject = OCMClassMock([TestClassWithProtocolBlockArgMethod class]);
+    [[mockObject stub] doStuffWithBlock:[OCMArg invokeBlockWithArgs:mockProtocol, nil]];
+
+    __block BOOL wasCalled = NO;
+    __block id<TestProtocol> firstParam;
+    void (^block)(id<TestProtocol> arg) = ^(id<TestProtocol> arg) {
+        wasCalled = YES;
+        firstParam = arg;
+    };
+    [mockObject doStuffWithBlock:block];
+
+    XCTAssertTrue(wasCalled, @"Should have invoked block.");
+    XCTAssertEqual(firstParam, mockProtocol, @"Param does not match");
+}
+
 // --------------------------------------------------------------------------------------
 //	accepting expected methods
 // --------------------------------------------------------------------------------------
@@ -1032,6 +1091,28 @@ static NSString *TestNotification = @"TestNotification";
 	}
 	XCTAssertNoThrow([mock verify], @"Should not have reraised stubbed exception.");
 
+}
+
+- (void)testAndThrowDoesntLeak {
+    __weak NSException *exception = nil;
+    @autoreleasepool {
+        id innerMock = [OCMockObject partialMockForObject:[NSProcessInfo processInfo]];
+        exception = [NSException exceptionWithName:NSGenericException
+                                            reason:nil
+                                          userInfo:nil];
+        [[[innerMock expect] andThrow:exception] arguments];
+
+        BOOL threw = NO;
+        @try {
+            [[NSProcessInfo processInfo] arguments];
+        } @catch (NSException *ex) {
+            threw = YES;
+        }
+        XCTAssertTrue(threw);
+        [innerMock verify]; [innerMock stopMocking]; innerMock = nil;
+    }
+
+    XCTAssertNil(exception, @"The exception should have been released by now");
 }
 
 - (void)testReRaisesRejectExceptionsOnVerify
