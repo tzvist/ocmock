@@ -362,16 +362,6 @@
     XCTAssertEqualObjects(@"mocked-class", [TestClassWithClassMethods foo], @"Should have stubbed class method.");
 }
 
-
-- (void)testCanExplicitlySelectClassMethodForVerify
-{
-    id mock = OCMClassMock([TestClassWithClassMethods class]);
-
-    [TestClassWithClassMethods bar];
-
-    OCMVerify(ClassMethod([mock bar]));
-}
-
 - (void)testSelectsInstanceMethodForVerifyWhenAmbiguous
 {
     id mock = OCMClassMock([TestClassWithClassMethods class]);
@@ -380,16 +370,6 @@
 
     OCMVerify([mock bar]);
 }
-
-- (void)testSelectsClassMethodForVerifyWhenUnambiguous
-{
-    id mock = OCMClassMock([TestClassWithClassMethods class]);
-
-    [TestClassWithClassMethods foo];
-
-    OCMVerify([mock foo]);
-}
-
 
 - (void)testCanUseMacroToStubMethodWithDecimalReturnValue
 {
