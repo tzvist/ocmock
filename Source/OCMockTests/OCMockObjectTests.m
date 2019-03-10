@@ -1138,6 +1138,19 @@ static NSString *TestNotification = @"TestNotification";
     XCTAssertTrue([end timeIntervalSinceDate:start] < 3, @"Should have returned before delay was up");
 }
 
+- (void)testArgumentsGetReleasedAfterStopMocking
+{
+    __weak id weakArgument;
+    mock = OCMClassMock([TestClassWithProperty class]);
+    @autoreleasepool {
+        NSMutableString *title = [NSMutableString new];
+        weakArgument = title;
+        [mock setTitle:title];
+        [mock stopMocking];
+    }
+    XCTAssertNil(weakArgument);
+}
+
 @end
 
 
