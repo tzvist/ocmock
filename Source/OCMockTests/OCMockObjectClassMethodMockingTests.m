@@ -293,19 +293,6 @@ static NSUInteger initializeCallCount = 0;
     XCTAssertThrows(OCMClassMock(nil));
 }
 
-- (void)testInitializeIsNotCalledOnMockedClass
-{
-    NSUInteger countBefore = [TestClassWithClassMethods initializeCallCount];
-
-    id mock = [OCMockObject mockForClass:[TestClassWithClassMethods class]];
-    [TestClassWithClassMethods foo];
-    [[mock verify] foo];
-
-    NSUInteger countAfter = [TestClassWithClassMethods initializeCallCount];
-
-    XCTAssertEqual(countBefore, countAfter, @"Creating a mock should not have resulted in call to +initialize");
-}
-
 - (void)testCanStubNSObjectClassMethodsIncludingAlloc
 {
     TestClassWithClassMethods *dummyObject = [[TestClassWithClassMethods alloc] init];
