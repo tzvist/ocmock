@@ -39,6 +39,7 @@
 
 - (id)never
 {
+    [[self expectation] setLocation:[self location]];
     [[self expectation] setMatchAndReject:YES];
     return self;
 }

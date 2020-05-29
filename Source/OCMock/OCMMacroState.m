@@ -60,9 +60,10 @@ static NSString *const OCMGlobalStateKey = @"OCMGlobalStateKey";
 }
 
 
-+ (void)beginRejectMacro
++ (void)beginRejectMacroAtLocation:(OCMLocation *)aLocation
 {
     OCMExpectationRecorder *recorder = [[[OCMExpectationRecorder alloc] init] autorelease];
+    [recorder setLocation:aLocation];
     [recorder never];
     OCMMacroState *macroState = [[OCMMacroState alloc] initWithRecorder:recorder];
     [NSThread currentThread].threadDictionary[OCMGlobalStateKey] = macroState;

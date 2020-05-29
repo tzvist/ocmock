@@ -69,7 +69,7 @@
 #define OCMReject(invocation) \
 ({ \
     _OCMSilenceWarnings( \
-        [OCMMacroState beginRejectMacro]; \
+        [OCMMacroState beginRejectMacroAtLocation:OCMMakeLocation(self, __FILE__, __LINE__)]; \
         OCMStubRecorder *recorder = nil; \
         @try{ \
             invocation; \
